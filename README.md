@@ -1,4 +1,4 @@
-# Bash Opts
+# Bash Opts [![Build Status](https://travis-ci.org/svenfuchs/bash_opts.svg?branch=master)](https://travis-ci.org/svenfuchs/bash_opts)
 
 Simple Bash options parser, no shit.
 
