@@ -63,31 +63,30 @@ function opts_eval() {
     done
   }
 
-  function opt_value() {
-    local arg=$1 opt=$2 name=$3 short=$4 value=
-
-    if [[ $arg =~ --$opt=(.*)$ || $arg =~ -$short=(.*)$ ]]; then
-      value=${BASH_REMATCH[1]}
-    elif [[ $arg =~ --$opt || $arg == -$short ]]; then
-      read value
-    fi
-
-    [[ -n $value ]] && echo $value
-  }
-
   function store_var() {
     __VARS__[${#__VARS__[@]}]="$1"
   }
 
+  function opt_value() {
+    local arg=$1 opt=$2 name=$3 short=$4
+
+    if [[ $arg =~ --$opt=(.*)$ || $arg =~ -$short=(.*)$ ]]; then
+      value=${BASH_REMATCH[1]}
+    elif [[ $arg =~ --$opt || $arg == -$short ]]; then
+      value="${__ARGS__[0]}"
+      __ARGS__=("${__ARGS__[@]:1}")
+    fi
+  }
+
   function set_var() {
     local name=$3 value=
-    value=$(opt_value "$@")
+    opt_value "$@"
     [[ -n $value ]] && store_var "$name=\"$value\""
   }
 
   function set_array() {
     local name=$3 value=
-    value=$(opt_value "$@")
+    opt_value "$@"
     [[ -n $value ]] && store_var "$name[\${#$name[@]}]=\"$value\""
   }
 
@@ -117,34 +116,26 @@ function opts_eval() {
     return 1
   }
 
-  local in=/tmp/bash_opts.in.$$$RANDOM
-  touch $in
-  trap "rm -f $in" exit
-  exec 6<&0 <$in
-
-  for arg in "$@"; do
-    printf "%s\n" "$arg" >> $in;
-  done
-  # __ARGS__=("${args[@]}")
+  __ARGS__=("$@")
   args=(0)
   opts_declare
 
-  while read arg; do
+  while (( ${#__ARGS__[@]} > 0 )); do
+    arg=${__ARGS__[0]}
+    __ARGS__=("${__ARGS__[@]:1}")
+
     if opts_parse "$arg"; then
-      # eval $var
       true
     elif [[ $arg =~ ^- ]]; then
       echo "Unknown option: ${arg}" >&2 && exit 1
     else
       args[${#args[@]}]="$arg"
     fi
-  done < $in
+  done
 
   for var in "${__VARS__[@]}"; do
     eval $var
   done
-
-  exec 0<&6 6<&-
 
   args=(${args[@]:1})
 }
