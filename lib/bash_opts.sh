@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a __OPTS__
+declare -a __OPTS__ __ARGS__ __VARS__
 
 function opts() {
   function opt_name() {
@@ -54,16 +54,12 @@ function opts_eval() {
     echo "$@" >&2
   }
 
-  function _eval() {
-    eval "$@"
-  }
-
   function opts_declare() {
     for opt in "${__OPTS__[@]}"; do
       local type name short negated
       eval "$opt"
-      [[ $type != array ]] || echo "$name=()"
-      [[ $type != flag ]]  || echo "$name=$([[ $negated == true ]] && echo true || echo false)"
+      [[ $type != array ]] || store_var "$name=()"
+      [[ $type != flag ]]  || store_var "$name=$([[ $negated == true ]] && echo true || echo false)"
     done
   }
 
@@ -79,17 +75,20 @@ function opts_eval() {
     [[ -n $value ]] && echo $value
   }
 
+  function store_var() {
+    __VARS__[${#__VARS__[@]}]="$1"
+  }
+
   function set_var() {
     local name=$3 value=
     value=$(opt_value "$@")
-    [[ -n $value ]] && echo "$name=\"$value\""
-
+    [[ -n $value ]] && store_var "$name=\"$value\""
   }
 
   function set_array() {
     local name=$3 value=
     value=$(opt_value "$@")
-    [[ -n $value ]] && echo "$name[\${#$name[@]}]=\"$value\""
+    [[ -n $value ]] && store_var "$name[\${#$name[@]}]=\"$value\""
   }
 
   function set_flag() {
@@ -101,7 +100,7 @@ function opts_eval() {
       value=$([[ -n ${BASH_REMATCH[1]} ]] && echo false || echo true)
     fi
 
-    [[ -n $value ]] && echo "$name=$value"
+    [[ -n $value ]] && store_var "$name=$value"
   }
 
   function opts_parse() {
@@ -111,9 +110,11 @@ function opts_eval() {
       local type name short negated value
       eval $opt
       if set_$type "$arg" "$opt" "$name" "$short"; then
-        break
+        return 0
       fi
     done
+
+    return 1
   }
 
   local in=/tmp/bash_opts.in.$$$RANDOM
@@ -124,18 +125,24 @@ function opts_eval() {
   for arg in "$@"; do
     printf "%s\n" "$arg" >> $in;
   done
+  # __ARGS__=("${args[@]}")
   args=(0)
-  eval $(opts_declare)
+  opts_declare
 
   while read arg; do
-    if var=$(opts_parse "$arg") && [[ -n $var ]]; then
-      eval $var
+    if opts_parse "$arg"; then
+      # eval $var
+      true
     elif [[ $arg =~ ^- ]]; then
       echo "Unknown option: ${arg}" >&2 && exit 1
     else
       args[${#args[@]}]="$arg"
     fi
   done < $in
+
+  for var in "${__VARS__[@]}"; do
+    eval $var
+  done
 
   exec 0<&6 6<&-
 
@@ -144,10 +151,10 @@ function opts_eval() {
 export -f opts_eval
 
 if [[ $0 == $BASH_SOURCE ]]; then
-  # args=("--foo=FOO" "--fuu" "FUU" "arg-1" "--bar=1" "--bar=2" "--baz" "--no-buz" "arg-2 --bum=3") # "--boz")
+  args=("--foo=FOO" "--fuu" "FUU" "arg-1" "--bar=1" "--bar=2" "--baz" "--no-buz" "arg-2 --bum=3") # "--boz")
   # args=("--foo=FOO" "--fuu=FUU")
   # args=("--foo" "FOO")
-  args=("--foo", "FOO BAR")
+  # args=("--foo", "FOO BAR")
 
   echo args: ${args[@]}
   echo opts: --[f]oo= --bars[]= --[b]az --no-buz
