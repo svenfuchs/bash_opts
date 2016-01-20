@@ -116,6 +116,7 @@ function opts_eval() {
     return 1
   }
 
+  local arg var
   __ARGS__=("$@")
   args=(0)
   opts_declare
