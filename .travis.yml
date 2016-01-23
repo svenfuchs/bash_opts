@@ -1,3 +1,16 @@
-language: ruby
-install: bundle install
-script: rspec
+language: haskell
+install:
+  - bundle install
+  - git clone https://github.com/koalaman/shellcheck.git
+  - pushd shellcheck
+  - cabal install
+  - popd
+cache:
+  directories:
+    - vendor/bundle
+    - $HOME/.cabsnap
+    - $HOME/.cabal/packages
+    - $HOME/.stack
+script:
+  - shellcheck lib/bash_opts.sh
+  - rspec
