@@ -52,17 +52,23 @@ $ bash examples/readme.sh arg-1 arg-2 -d --name="Bash Opts" -f=path/to/foo.sh -f
 debug: true
 name: Bash Opts
 files: path/to/foo.sh path/to/bar.sh
-args: arg-1 arg-2```
+args: arg-1 arg-2
 ```
 
-Options need to be defined as long names, as in `--debug`. Short names can be
-defined by enclosing contained characters in square brackes, e.g. `--[d]ebug`.
-It is not possible to define a short name without also defining a long name, or
-to define a short name with characters that are not contained in the long name.
+## Options
+
+Options need to be defined as long names, as in `--debug`.
+
+#### Short names
+
+Short names can be defined by enclosing contained characters in square brackes,
+e.g. `--[d]ebug`.  It is not possible to define a short name without also
+defining a long name, or to define a short name with characters that are not
+contained in the long name.
 
 There are three types of options:
 
-### Flags
+#### Flags
 
 Flags, e.g. `--debug`, do not take a value.
 
@@ -70,7 +76,7 @@ A flag is defined as just `--debug`. When evaluated it always sets its
 corresponding variable to either `true` or `false` (as strings). I.e. the
 condition `[[ $debug == true ]]` will match when `--debug` was evaluated.
 
-### Variables
+#### Variables
 
 Plain variables, e.g. `--name=`, expect a value.
 
@@ -79,7 +85,7 @@ match a single passed argument with an equal sign separating name and value
 (e.g. `--name="Bash Options"`), or two passed arguments when the name does not
 end with an equal sign (e.g. `--name "Bash Options"`).
 
-### Arrays
+#### Arrays
 
 Arrays, e.g. `--files[]=`, expect a value, too, and can be passed several times.
 
@@ -89,7 +95,7 @@ They match one or many arguments with their singular name.
 E.g. `--file 1.sh --file 2.sh` will evalute to an array variable `files` which
 contains two strings `1.sh` and `2.sh`.
 
-### Remaining argumetns
+## Remaining arguments
 
 Arguments that do not match any of the defined options, and that do not begin
 with a dash `-`, will end up in an array variable `args`.

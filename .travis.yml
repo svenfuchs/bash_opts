@@ -7,7 +7,6 @@ install:
   - popd
 cache:
   directories:
-    - vendor/bundle
     - $HOME/.cabsnap
     - $HOME/.cabal/packages
     - $HOME/.stack
