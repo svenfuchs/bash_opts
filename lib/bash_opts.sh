@@ -5,28 +5,34 @@ declare -a __OPTS__ __ARGS__ __VARS__
 function opts() {
   function opt_name() {
     local opt=$1
-    local type=$(opt_type $opt)
-    local name=$(echo ${opt/--no-/} | tr -d '\-=[]')
-    [[ $type == array && ${name: -1} == s ]] && name=${name%?} || true
-    echo $name
+    local type name
+    type=$(opt_type "$opt")
+    name=$(echo "${opt/--no-/}" | tr -d '\-=[]')
+
+    if [[ $type == array && ${name: -1} == s ]]; then
+      name=${name%?}
+    fi
+    echo "$name"
   }
 
   function var_name() {
     local opt=$1
-    echo ${opt/--no-/} | tr -d '\-=[]'
+    echo "${opt/--no-/}" | tr -d '\-=[]'
   }
 
   function short_name() {
     local opt=$1
     local name=${opt/[]//}
-    [[ $name =~ (\[(.)\]) ]] && echo ${BASH_REMATCH[2]} || true
+    if [[ $name =~ (\[(.)\]) ]]; then
+      echo "${BASH_REMATCH[2]}"
+    fi
   }
 
   function opt_type() {
     local opt=$1
     local type=flag
     [[ ! $opt =~ =$   ]] || type=var
-    [[ ! $opt =~ '[]' ]] || type=array
+    [[ ! $opt =~ \[\] ]] || type=array
     echo $type
   }
 
@@ -37,13 +43,13 @@ function opts() {
 
   local opts=("$@")
 
-  for opt in ${opts[@]}; do
+  for opt in "${opts[@]}"; do
     __OPTS__[${#__OPTS__[@]}]="
-      opt=$(opt_name $opt)
-      name=$(var_name $opt)
-      type=$(opt_type $opt)
-      short=$(short_name $opt)
-      negated=$(negated $opt)
+      opt=$(opt_name "$opt")
+      name=$(var_name "$opt")
+      type=$(opt_type "$opt")
+      short=$(short_name "$opt")
+      negated=$(negated "$opt")
     "
   done
 }
@@ -87,7 +93,7 @@ function opts_eval() {
   function set_array() {
     local name=$3 value=
     opt_value "$@"
-    [[ -n $value ]] && store_var "$name[\${#$name[@]}]=\"$value\""
+    [[ -n $value ]] && store_var "$name[\${#""$name""[@]}]=\"$value\""
   }
 
   function set_flag() {
@@ -107,7 +113,7 @@ function opts_eval() {
 
     for opt in "${__OPTS__[@]}"; do
       local type name short negated value
-      eval $opt
+      eval "$opt"
       if set_$type "$arg" "$opt" "$name" "$short"; then
         return 0
       fi
@@ -135,32 +141,32 @@ function opts_eval() {
   done
 
   for var in "${__VARS__[@]}"; do
-    eval $var
+    eval "$var"
   done
 
   args=(${args[@]:1})
 }
 export -f opts_eval
 
-if [[ $0 == $BASH_SOURCE ]]; then
-  args=("--foo=FOO" "--fuu" "FUU" "arg-1" "--bar=1" "--bar=2" "--baz" "--no-buz" "arg-2 --bum=3") # "--boz")
-  # args=("--foo=FOO" "--fuu=FUU")
-  # args=("--foo" "FOO")
-  # args=("--foo", "FOO BAR")
-
-  echo args: ${args[@]}
-  echo opts: --[f]oo= --bars[]= --[b]az --no-buz
-  opts --[f]oo= --fuu= --bars[]= --[b]az --no-buz
-  opts_eval "${args[@]}"
-
-  echo
-  echo foo: ${foo:=}
-  echo fuu: ${fuu:=}
-  [[ ${#bars[@]} == 0 ]] || for bar in ${bars[@]}; do echo bar: $bar; done
-  echo baz: ${baz:=}
-  echo buz: ${buz:=}
-
-  echo
-  echo args: ${#args[@]}
-  [[ ${#args[@]} == 0 ]] || for arg in "${args[@]}"; do echo arg: "$arg"; done
-fi
+# if [[ $0 == "$BASH_SOURCE" ]]; then
+#   args=("--foo=FOO" "--fuu" "FUU" "arg-1" "--bar=1" "--bar=2" "--baz" "--no-buz" "arg-2 --bum=3") # "--boz")
+#   # args=("--foo=FOO" "--fuu=FUU")
+#   # args=("--foo" "FOO")
+#   # args=("--foo", "FOO BAR")
+#
+#   echo args: "${args[@]}"
+#   echo opts: --[f]oo= --bars[]= --[b]az --no-buz
+#   opts --[f]oo= --fuu= --bars[]= --[b]az --no-buz
+#   opts_eval "${args[@]}"
+#
+#   echo
+#   echo foo: ${foo:=}
+#   echo fuu: ${fuu:=}
+#   [[ ${#bars[@]} == 0 ]] || for bar in ${bars[@]}; do echo bar: $bar; done
+#   echo baz: ${baz:=}
+#   echo buz: ${buz:=}
+#
+#   echo
+#   echo args: ${#args[@]}
+#   [[ ${#args[@]} == 0 ]] || for arg in "${args[@]}"; do echo arg: "$arg"; done
+# fi
