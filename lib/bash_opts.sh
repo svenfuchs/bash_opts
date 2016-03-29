@@ -131,7 +131,10 @@ function opts_eval() {
     arg=${__ARGS__[0]}
     __ARGS__=("${__ARGS__[@]:1}")
 
-    if opts_parse "$arg"; then
+    if [[ $arg == '--' ]]; then
+      args=( ${args[@]} ${__ARGS__[@]} )
+      break
+    elif opts_parse "$arg"; then
       true
     elif [[ $arg =~ ^- ]]; then
       echo "Unknown option: ${arg}" >&2 && exit 1

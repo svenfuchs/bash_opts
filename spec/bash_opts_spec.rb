@@ -34,7 +34,7 @@ describe 'bash_opts' do
 
   shared_examples_for 'keeps the given args' do |input, args|
     let(:input) { input }
-    it { expect(`bash -c '#{script(definition, input)}; echo ${args[@]}'`.chomp).to eq args }
+    it { expect(`bash -c '#{script(definition, input)}; set +u; echo ${args[@]}'`.chomp).to eq args }
   end
 
   describe 'flags' do
@@ -136,5 +136,12 @@ describe 'bash_opts' do
     describe 'given all over the place' do
       include_examples 'keeps the given args', ['foo', '--name', 'name', 'bar', '--debug', 'baz'], 'foo bar baz'
     end
+  end
+
+  describe 'separating args with --' do
+    let(:definition) { '--debug --name=' }
+
+    include_examples 'keeps the given args', ['--', 'foo', '--bar', '--baz'], 'foo --bar --baz'
+    include_examples 'keeps the given args', ['foo', '--', 'bar', '--baz'], 'foo bar --baz'
   end
 end
