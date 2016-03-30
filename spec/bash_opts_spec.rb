@@ -86,6 +86,11 @@ describe 'bash_opts' do
       let(:definition) { '--file=' }
       include_examples 'sets variables', ['--file', './file with spaces.sh'], file: './file with spaces.sh'
     end
+
+    describe 'with an empty string' do
+      let(:definition) { '--file=' }
+      include_examples 'sets variables', ['--file', ''], file: ''
+    end
   end
 
   describe 'vars (not using =)' do

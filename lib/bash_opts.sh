@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a __OPTS__ __ARGS__ __VARS__
+declare -a __OPTS__ __VARS__
 
 function opts() {
   function opt_name() {
@@ -75,25 +75,18 @@ function opts_eval() {
 
   function opt_value() {
     local arg=$1 opt=$2 name=$3 short=$4
-
-    if [[ $arg =~ --$opt=(.*)$ || $arg =~ -$short=(.*)$ ]]; then
-      value=${BASH_REMATCH[1]}
-    elif [[ $arg =~ --$opt || $arg == -$short ]]; then
-      value="${__ARGS__[0]}"
-      __ARGS__=("${__ARGS__[@]:1}")
-    fi
+    [[ $arg =~ --$opt=(.*)$ || $arg =~ -$short=(.*)$ ]] || return 1
+    echo ${BASH_REMATCH[1]}
   }
 
   function set_var() {
     local name=$3 value=
-    opt_value "$@"
-    [[ -n $value ]] && store_var "$name=\"$value\""
+    value=$(opt_value "$@") && store_var "$name=\"$value\""
   }
 
   function set_array() {
     local name=$3 value=
-    opt_value "$@"
-    [[ -n $value ]] && store_var "$name[\${#""$name""[@]}]=\"$value\""
+    value=$(opt_value "$@") && store_var "$name[\${#""$name""[@]}]=\"$value\""
   }
 
   function set_flag() {
@@ -122,17 +115,36 @@ function opts_eval() {
     return 1
   }
 
-  local arg var
-  __ARGS__=("$@")
-  args=(0)
+  function opts_join_assignment() {
+    local arg=$1
+    local match type name short negated value
+
+    for opt in "${__OPTS__[@]}"; do
+      eval "$opt"
+      if [[ $type != flag && ($arg == --$opt || $arg == -$short) ]]; then #  && (( $# > 0 ))
+        return 0
+      fi
+    done
+
+    return 1
+  }
+
   opts_declare
 
-  while (( ${#__ARGS__[@]} > 0 )); do
-    arg=${__ARGS__[0]}
-    __ARGS__=("${__ARGS__[@]:1}")
+  local arg var
+  args=(0)
+
+  while (( $# > 0 )); do
+    if opts_join_assignment $1; then
+      arg="$1=$2"
+      shift
+    else
+      arg=$1
+    fi
+    shift
 
     if [[ $arg == '--' ]]; then
-      args=( ${args[@]} ${__ARGS__[@]} )
+      args=( ${args[@]} $@ )
       break
     elif opts_parse "$arg"; then
       true
