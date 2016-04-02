@@ -1,6 +1,10 @@
 describe 'bash_opts' do
   let(:path)   { 'lib/bash_opts.sh' }
 
+  def bash(code)
+    `bash -c 'set -eu; source #{path}; #{code}'`.chomp
+  end
+
   def script(definition, input)
     "set -eu; source #{path}; opts #{definition}; opts_eval #{quoted(*input)}"
   end
@@ -148,5 +152,31 @@ describe 'bash_opts' do
 
     include_examples 'keeps the given args', ['--', 'foo', '--bar', '--baz'], 'foo --bar --baz'
     include_examples 'keeps the given args', ['foo', '--', 'bar', '--baz'], 'foo bar --baz'
+  end
+
+  describe 'opt' do
+    it 'echoes the var option if not empty' do
+      expect(bash('opts --name=; opts_eval "$@"; name=foo; opt name')).to eq '--name="foo"'
+    end
+
+    it 'echoes the var option if empty' do
+      expect(bash('opts --name=; opts_eval "$@"; name=; opt name')).to eq '--name=""'
+    end
+
+    it 'echoes the array option if not empty' do
+      expect(bash('opts --names[]=; opts_eval "$@"; names=(foo bar); opt names')).to eq '--name="foo" --name="bar"'
+    end
+
+    it 'echoes the array option if empty' do
+      expect(bash('opts --names[]=; opts_eval "$@"; names=(); opt names')).to eq ''
+    end
+
+    it 'echoes the flag option if given' do
+      expect(bash('opts --debug; opts_eval "$@"; debug=true; opt debug')).to eq '--debug'
+    end
+
+    it 'does not echo flag option if not given' do
+      expect(bash('opts --debug; opts_eval "$@"; debug=false; opt debug')).to eq ''
+    end
   end
 end

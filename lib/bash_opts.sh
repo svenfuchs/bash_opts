@@ -137,11 +137,11 @@ function opts_eval() {
   while (( $# > 0 )); do
     if opts_join_assignment $1; then
       arg="$1=$2"
-      shift
+      shift || true
     else
       arg=$1
     fi
-    shift
+    shift || true
 
     if [[ $arg == '--' ]]; then
       args=( ${args[@]} $@ )
@@ -155,13 +155,50 @@ function opts_eval() {
     fi
   done
 
-  for var in "${__VARS__[@]}"; do
-    eval "$var"
-  done
+  if (( ${#__VARS__} > 0 )); then
+    for var in "${__VARS__[@]}"; do
+      eval "$var"
+    done
+  fi
 
   args=(${args[@]:1})
 }
 export -f opts_eval
+
+function opt() {
+  function opt_type() {
+    local name=$1
+    local opt=$(echo ${__OPTS__[@]} | grep $name)
+    local line=$(echo $opt | tr ' ' "\n" | grep "type=")
+    echo ${line#*=}
+  }
+
+  function array_opts() {
+    local name=$1
+    local length=$(eval "echo \${#$name[@]}")
+    (( $length > 0 )) || return
+    local values=$(eval "echo \${$name[@]}")
+    local value
+    for value in ${values[@]}; do
+      echo "--${name%s}=\"$value\""
+    done
+  }
+
+  local _name=$1
+  local _type=$(opt_type $_name)
+
+  if [[ $_type == var ]]; then
+    echo "--$_name=\"$(eval "echo \$$_name")\""
+  elif [[ $_type == array ]]; then
+    array_opts $_name | tr "\n" ' ' | sed 's/ *$//'
+  elif [[ $_type == flag ]]; then
+    [[ $(eval "echo \$$_name") == false ]] || echo "--$_name"
+  else
+    echo "[${0##*/}] Unknown option $_name"
+    exit 1
+  fi
+}
+export -f opt
 
 # if [[ $0 == "$BASH_SOURCE" ]]; then
 #   args=("--foo=FOO" "--fuu" "FUU" "arg-1" "--bar=1" "--bar=2" "--baz" "--no-buz" "arg-2 --bum=3") # "--boz")
