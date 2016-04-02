@@ -1,6 +1,7 @@
 #!/bin/bash
 
 declare -a __OPTS__ __VARS__
+__VARS__=()
 
 function opts() {
   function opt_name() {

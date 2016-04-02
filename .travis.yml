@@ -1,15 +1,15 @@
 language: haskell
 install:
   - bundle install
-  - git clone https://github.com/koalaman/shellcheck.git
-  - pushd shellcheck
-  - cabal install
-  - popd
+  # - git clone https://github.com/koalaman/shellcheck.git
+  # - pushd shellcheck
+  # - cabal install
+  # - popd
 cache:
-  directories:
-    - $HOME/.cabsnap
-    - $HOME/.cabal/packages
-    - $HOME/.stack
+  # directories:
+  #   - $HOME/.cabsnap
+  #   - $HOME/.cabal/packages
+  #   - $HOME/.stack
 script:
-  - shellcheck lib/bash_opts.sh || true
+  # - shellcheck lib/bash_opts.sh || true
   - rspec
