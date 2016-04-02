@@ -169,7 +169,7 @@ function opt() {
   function opt_type() {
     local name="$1"
     local opt line
-    opt=$(echo "${__OPTS__[@]}" | grep "$name")
+    opt=$(echo "${__OPTS__[@]}" | tr "\n" ' ' | grep "name=$name")
     line=$(echo "$opt" | tr ' ' "\n" | grep "type=")
     echo "${line#*=}"
   }
@@ -180,7 +180,7 @@ function opt() {
 
     length=$(eval "echo \${#$name[@]}")
     (( length > 0 )) || return
-    values=$(eval "echo \${$name[@]}")
+    values=($(eval "echo \${$name[@]}"))
 
     for value in "${values[@]}"; do
       echo "--${name%s}=\"$value\""
@@ -189,7 +189,7 @@ function opt() {
 
   local _name="$1"
   local _type
-  type=$(opt_type "$_name")
+  _type=$(opt_type "$_name")
 
   if [[ $_type == var ]]; then
     echo "--$_name=\"$(eval "echo \$$_name")\""
