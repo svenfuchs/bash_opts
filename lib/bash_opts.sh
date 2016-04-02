@@ -76,7 +76,7 @@ function opts_eval() {
   function opt_value() {
     local arg=$1 opt=$2 name=$3 short=$4
     [[ $arg =~ --$opt=(.*)$ || $arg =~ -$short=(.*)$ ]] || return 1
-    echo ${BASH_REMATCH[1]}
+    echo "${BASH_REMATCH[1]}"
   }
 
   function set_var() {
@@ -117,7 +117,7 @@ function opts_eval() {
 
   function opts_join_assignment() {
     local arg=$1
-    local match type name short negated value
+    local type name short negated value
 
     for opt in "${__OPTS__[@]}"; do
       eval "$opt"
@@ -135,7 +135,7 @@ function opts_eval() {
   args=(0)
 
   while (( $# > 0 )); do
-    if opts_join_assignment $1; then
+    if opts_join_assignment "$1"; then
       arg="$1=$2"
       shift || true
     else
@@ -167,30 +167,34 @@ export -f opts_eval
 
 function opt() {
   function opt_type() {
-    local name=$1
-    local opt=$(echo ${__OPTS__[@]} | grep $name)
-    local line=$(echo $opt | tr ' ' "\n" | grep "type=")
-    echo ${line#*=}
+    local name="$1"
+    local opt line
+    opt=$(echo "${__OPTS__[@]}" | grep "$name")
+    line=$(echo "$opt" | tr ' ' "\n" | grep "type=")
+    echo "${line#*=}"
   }
 
   function array_opts() {
-    local name=$1
-    local length=$(eval "echo \${#$name[@]}")
-    (( $length > 0 )) || return
-    local values=$(eval "echo \${$name[@]}")
-    local value
-    for value in ${values[@]}; do
+    local name="$1"
+    local length values value
+
+    length=$(eval "echo \${#$name[@]}")
+    (( length > 0 )) || return
+    values=$(eval "echo \${$name[@]}")
+
+    for value in "${values[@]}"; do
       echo "--${name%s}=\"$value\""
     done
   }
 
-  local _name=$1
-  local _type=$(opt_type $_name)
+  local _name="$1"
+  local _type
+  type=$(opt_type "$_name")
 
   if [[ $_type == var ]]; then
     echo "--$_name=\"$(eval "echo \$$_name")\""
   elif [[ $_type == array ]]; then
-    array_opts $_name | tr "\n" ' ' | sed 's/ *$//'
+    array_opts "$_name" | tr "\n" ' ' | sed 's/ *$//'
   elif [[ $_type == flag ]]; then
     [[ $(eval "echo \$$_name") == false ]] || echo "--$_name"
   else
