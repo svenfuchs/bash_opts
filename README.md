@@ -11,7 +11,7 @@ E.g. the following lines will output `Bash Opts`:
 
 ```bash
 opts --name=
-opts_eval "--name=Bash Opts"
+opts_eval "--name='Bash Opts'"
 echo $name
 ```
 
@@ -23,7 +23,7 @@ E.g. this will output `foo bar`:
 
 ```bash
 opts --name=
-opts_eval "foo" "bar" "--name=Bash Opts"
+opts_eval "foo" "bar" "--name='Bash Opts'"
 echo ${args[@]}
 ```
 
@@ -104,3 +104,44 @@ Such arguments can be given at any position between valid options. However,
 obviously, they must not sit between a variable option and its corresponding
 value argument when using the syntax without an equal sign (as in `--name
 foo`).
+
+## Helper functions
+
+### opt
+
+The helper function `opt` echoes a string to pass an option with the same value
+as defined at this moment. This is handy for passing options through one
+command or function to another.
+
+```
+opts --debug
+opts_eval "--debug"
+opt debug
+# => --debug
+
+opts --debug
+opts_eval ""
+opt debug
+# =>
+
+opts --name=
+opts_eval "--name=foo"
+opt name
+# => --name="foo"
+
+opts --name=
+opts_eval ""
+opt name
+# => --name=""
+
+opts --paths[]=
+opts_eval "--path=./foo --path=./bar"
+opt paths
+# => --path="./foo" --path="./bar"
+
+opts --paths[]=
+opts_eval ""
+opt paths
+# =>
+```
+
