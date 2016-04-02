@@ -1,7 +1,6 @@
 #!/bin/bash
 
 declare -a __OPTS__ __VARS__
-__VARS__=()
 
 function opts() {
   function opt_name() {
@@ -65,6 +64,7 @@ function opts_eval() {
     for opt in "${__OPTS__[@]}"; do
       local type name short negated
       eval "$opt"
+      [[ $type != var ]]   || store_var "$name="
       [[ $type != array ]] || store_var "$name=()"
       [[ $type != flag ]]  || store_var "$name=$([[ $negated == true ]] && echo true || echo false)"
     done
@@ -156,11 +156,9 @@ function opts_eval() {
     fi
   done
 
-  if (( ${#__VARS__} > 0 )); then
-    for var in "${__VARS__[@]}"; do
-      eval "$var"
-    done
-  fi
+  for var in "${__VARS__[@]}"; do
+    eval "$var"
+  done
 
   args=(${args[@]:1})
 }
