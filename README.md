@@ -105,6 +105,14 @@ obviously, they must not sit between a variable option and its corresponding
 value argument when using the syntax without an equal sign (as in `--name
 foo`).
 
+Anything separated with `--` will end up in the `args` array as well:
+
+```
+opts_eval "foo" "bar" "--" "baz"
+echo "args: ${args[@]}"
+=> foo bar baz
+```
+
 ## Helper functions
 
 ### opt
