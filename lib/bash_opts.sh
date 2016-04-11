@@ -166,40 +166,30 @@ export -f opts_eval
 
 function opt() {
   function opt_type() {
-    local name="$1"
     local opt line
-    opt=$(echo "${__OPTS__[@]}" | tr "\n" ' ' | grep "name=$name")
-    line=$(echo "$opt" | tr ' ' "\n" | grep "type=")
+    line=$(echo "${__OPTS__[@]}" | grep -A 1 "name=$1" | tail -n 1)
     echo "${line#*=}"
   }
 
-  function array_opts() {
-    local name="$1"
-    local length values value
-
-    length=$(eval "echo \${#$name[@]}")
-    (( length > 0 )) || return
-    values=($(eval "echo \${$name[@]}"))
-
-    for value in "${values[@]}"; do
-      echo "--${name%s}=\"$value\""
-    done
+  function opt_var() {
+    echo "--$1=\"$(eval "echo \$$1")\""
   }
 
-  local _name="$1"
-  local _type
-  _type=$(opt_type "$_name")
+  function opt_array() {
+    local _length
+    _length=$(eval "echo \${#$1[@]}")
+    (( _length == 0 )) || echo $(
+      for ((_i=0; _i < _length ; _i++)); do
+        echo "--${1%s}=\"$(eval "echo \${$1[$_i]}")\""
+      done
+    ) | tr "\n" ' ' | sed 's/ *$//'
+  }
 
-  if [[ $_type == var ]]; then
-    echo "--$_name=\"$(eval "echo \$$_name")\""
-  elif [[ $_type == array ]]; then
-    array_opts "$_name" | tr "\n" ' ' | sed 's/ *$//'
-  elif [[ $_type == flag ]]; then
-    [[ $(eval "echo \$$_name") == false ]] || echo "--$_name"
-  else
-    echo "[${0##*/}] Unknown option $_name"
-    exit 1
-  fi
+  function opt_flag() {
+    [[ $(eval "echo \$$1") == false ]] || echo "--$1"
+  }
+
+  opt_$(opt_type "$1") "$1"
 }
 export -f opt
 

@@ -164,7 +164,7 @@ describe 'bash_opts' do
     end
 
     it 'echoes the array option if not empty' do
-      expect(bash('opts --names[]=; opts_eval "$@"; names=(foo bar); opt names')).to eq '--name="foo" --name="bar"'
+      expect(bash('opts --names[]=; opts_eval "$@"; names=("foo bar" "baz"); opt names')).to eq '--name="foo bar" --name="baz"'
     end
 
     it 'echoes the array option if empty' do
