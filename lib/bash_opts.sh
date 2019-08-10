@@ -1,6 +1,8 @@
 #!/bin/bash
 
-declare -a __OPTS__ __VARS__
+# set -x
+
+declare -a __OPTS__=() __VARS__=()
 
 function opts() {
   function opt_name() {
@@ -62,7 +64,7 @@ function opts_eval() {
 
   function opts_declare() {
     for opt in "${__OPTS__[@]}"; do
-      local type name short negated
+      local type= name= short= negated=
       eval "$opt"
       [[ $type != var ]]   || store_var "$name="
       [[ $type != array ]] || store_var "$name=()"
@@ -106,7 +108,7 @@ function opts_eval() {
     local arg=$1
 
     for opt in "${__OPTS__[@]}"; do
-      local type name short negated value
+      local type= name= short= negated= value=
       eval "$opt"
       if set_$type "$arg" "$opt" "$name" "$short"; then
         return 0
@@ -117,8 +119,7 @@ function opts_eval() {
   }
 
   function opts_join_assignment() {
-    local arg=$1
-    local type name short negated value
+    local arg=$1 type= name= short= negated= value=
 
     for opt in "${__OPTS__[@]}"; do
       eval "$opt"

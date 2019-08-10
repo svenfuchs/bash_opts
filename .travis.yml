@@ -2,15 +2,5 @@ language: shell
 install:
   - echo "${BASH_VERSION}"
   - bundle install
-  # - git clone https://github.com/koalaman/shellcheck.git
-  # - pushd shellcheck
-  # - cabal install
-  # - popd
-cache:
-  # directories:
-  #   - $HOME/.cabsnap
-  #   - $HOME/.cabal/packages
-  #   - $HOME/.stack
 script:
-  # - shellcheck lib/bash_opts.sh || true
   - rspec
