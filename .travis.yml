@@ -1,6 +1,5 @@
 language: shell
 install:
-  - echo "${BASH_VERSION}"
   - bundle install
 script:
   - rspec
