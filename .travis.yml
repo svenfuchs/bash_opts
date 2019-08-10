@@ -1,5 +1,6 @@
-language: haskell
+language: shell
 install:
+  - echo "${BASH_VERSION}"
   - bundle install
   # - git clone https://github.com/koalaman/shellcheck.git
   # - pushd shellcheck
